@@ -112,14 +112,13 @@ def get_good_dir(c_room):
             print(used_dir)
             new_list = []
             for i in exit_list:
-                print(i)
                 if i not in used_dir:
                     new_list.append(i)
-
-            print('new_list', new_list)
-            index = random.randint(0, len(new_list)-1)
-            print("new good dir", new_list[index])
-            out = new_list[index]
+            if len(new_list) > 0:
+                print('new_list', new_list)
+                index = random.randint(0, len(new_list)-1)
+                print("new good dir", new_list[index])
+                out = new_list[index]
 
         else:
             print('there are more in here than 2')
@@ -185,6 +184,7 @@ while plan_to_visit.size() > 0:
                 player.travel(rand_dir)
             elif next.id in visited:
                 print(f"it's in the visited list already")
+                print(f"where are we now {player.current_room.id}")
         if rand_dir == None:
             visited = g.vertices
             print("rand_dir == None")
@@ -224,12 +224,17 @@ while plan_to_visit.size() > 0:
                     print("traversal_path: ", traversal_path)
                     if len(tp_copy) != 0:
                         q.enqueue(tp_copy[-1])
-    current = player.current_room.id
-    print("back to stack again: ", current, player.current_room.id)
-    rand_dir = get_good_dir(current)
-    # when dequeueing from end remove it from path copy
-    # also need to
-    print(f"in room: ", player.current_room.id)
+                    if len(tp_copy) == 0:
+                        current = player.current_room.id
+                        print(f"the graph: {g.vertices}")
+                        rand_dir = get_good_dir(current)
+                        print(f"in room: ", player.current_room.id)
+                        next = player.current_room.get_room_in_direction(
+                            rand_dir)
+                        # g.add_vertex
+                        plan_to_visit.push(next.id)
+                        player.travel(rand_dir)
+                        print("back to stack again: ",  player.current_room.id)
     # this is where i put the bft part now until find a room with an exit that isnt used yet
     ####
     # NOW BACK TO PREVIOUSLY WRITTEN CODE (NOT MINE BELOW)... ITS THE TEST TRAVERSAL
