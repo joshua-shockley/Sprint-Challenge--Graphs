@@ -16,14 +16,28 @@ class Graph:
         Add a vertex to the graph.
         """
         # this should be the room id in our case here and should be a dict
-        self.vertices[vertex_id] = {'n': '?', 's': '?', 'w': '?', 'e': '?'}
+        # LOOK AT NEXT LINE TO FIX ONE ISSUE
+        # this should not be a preset list... should be added from get_exits()
+        self.vertices[vertex_id] = {}
 
-    def add_edge(self, v1, v2, v3):
+    def add_init_edge(self, v1, directions):
+        if v1 in self.vertices:
+            for i in directions:
+                self.vertices[v1][i] = '?'
+
+    def add_edge(self, v1, v2, v3, opp_fn):
         """
         Add a directed edge to the graph.
+
+        v1 = the current_room/room
+        v2 = the direction in get_exits()
+        v3 = is what room is in dir v2
         """
-        if v1 in self.vertices and v2 in self.vertices[v1]:
+
+        if v1 in self.vertices and v3 in self.vertices:
+            v4 = opp_fn
             self.vertices[v1][v2] = v3
+            self.vertices[v3][v4] = v1
         else:
             raise IndexError("That vertex does not exist!")
 
@@ -160,20 +174,20 @@ class Graph:
     #                 neighbors_to_visit.push((neighbor, updated_path))
 
 
-g = Graph()
-g.add_vertex(0)
-g.add_vertex(1)
-g.add_vertex(2)
-g.add_vertex(3)
-g.add_vertex(4)
+# g = Graph()
+# g.add_vertex(0)
+# g.add_vertex(1)
+# g.add_vertex(2)
+# g.add_vertex(3)
+# g.add_vertex(4)
 
-g.add_vertex(5)
-g.add_vertex(6)
-g.add_vertex(7)
-g.add_vertex(8)
-g.add_vertex(9)
-print(g.vertices)
+# g.add_vertex(5)
+# g.add_vertex(6)
+# g.add_vertex(7)
+# g.add_vertex(8)
+# g.add_vertex(9)
+# print(g.vertices)
 
-g.add_edge(0, 'n', 5)
-print(g.vertices)
-print(g.get_neighbors(0))
+# g.add_edge(0, 'n', 5)
+# print(g.vertices)
+# print(g.get_neighbors(0))
