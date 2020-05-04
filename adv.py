@@ -153,6 +153,7 @@ while plan_to_visit.size() > 0:
                 print(f"it's in the visited list already")
         if rand_dir == None:
             print("rand_dir == None")
+            # put in the BFT now to find next room with unused exits.
     print(player.current_room.id)
     # this is where i put the bft part now until find a room with an exit that isnt used yet
     ####
