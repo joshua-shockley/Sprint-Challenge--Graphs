@@ -12,8 +12,8 @@ world = World()
 
 # You may uncomment the smaller graphs for development and testing purposes.
 # map_file = "maps/test_line.txt"  # this one passes currently
-map_file = "maps/test_cross.txt"
-# map_file = "maps/test_loop.txt"
+# map_file = "maps/test_cross.txt"
+map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
 # map_file = "maps/main_maze.txt"
 
@@ -184,7 +184,7 @@ while plan_to_visit.size() > 0:
                 player.travel(rand_dir)
             elif next.id in visited:
                 print(f"it's in the visited list already")
-                print(f"where are we now {player.current_room.id}")
+                # print(f"where are we now {player.current_room.id}")
         if rand_dir == None:
             visited = g.vertices
             print("rand_dir == None")
