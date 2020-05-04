@@ -58,6 +58,22 @@ def make_opposite_dir(dir):
         return e
 
 
+def get_check_dir(current_room):
+    exit_list = player.current_room.get_exits()
+    print("printing exit list in check of queue: ", exit_list)
+    q_visited = visited
+    print(f"what's in copy visited in current_room: {q_visited}")
+    exits = player.current_room.get_exits()
+    print("exits of current room", exits)
+    if len(exits) == len(visited[current_room]):
+        print('True as dirt')
+        return True
+    print(current_room)
+    print(player.current_room.id)
+    print(len(exits), len(visited[current_room]))
+    print(exits, visited[current_room])
+
+
 def get_good_dir(c_room):
     out = ''
     exit_list = player.current_room.get_exits()
@@ -88,13 +104,30 @@ def get_good_dir(c_room):
             out = exit_list[-1]
             return out
     if len(exit_list) >= 3:
-        print('there are more in here')
-        index = random.randint(0, len(exit_list)-1)
-        print(
-            f"length of exit_list: {len(exit_list)}\n index picked at random: {index}")
-        print(exit_list[index])
-        out = exit_list[index]
+        if len(visited) > 0:
+            print('next stage mate')
+            print('current used dir', g.vertices[player.current_room.id])
+            used = g.vertices[player.current_room.id]
+            used_dir = list(used.keys())
+            print(used_dir)
+            new_list = []
+            for i in exit_list:
+                print(i)
+                if i not in used_dir:
+                    new_list.append(i)
 
+            print('new_list', new_list)
+            index = random.randint(0, len(new_list)-1)
+            print("new good dir", new_list[index])
+            out = new_list[index]
+
+        else:
+            print('there are more in here than 2')
+            index = random.randint(0, len(exit_list)-1)
+            print(
+                f"length of exit_list: {len(exit_list)}\n index picked at random: {index}")
+            print(exit_list[index])
+            out = exit_list[index]
     return out
 
 
@@ -137,12 +170,13 @@ while plan_to_visit.size() > 0:
                 f"current_room: {current_room}, rand_dir: {rand_dir}, next.id: {next.id}")
             g.add_edge(current_room, rand_dir, next.id,
                        make_opposite_dir(rand_dir))
-            # AT EACH STEP SHOULD ALSO ADD THE CURRENT ROOM'S PREIOUS ROOM DIR
+            # visited[next.id][make_opposite_dir(rand_dir)] = current_room
+            # AT EACH STEP SHOULD ALSO ADD THE CURRENT ROOM'S PREvIOUS ROOM DIR
             # AS WELL AS THE NEXT SO IT MARKS WHERE IT CAME FROM
 
             # the current location added to the visited list above
             print(f"print visited list: {visited}")
-            print(g.vertices)
+            print(f"graph info: ", g.vertices)
             if next.id not in visited:
                 print(f"{next.id} not in {visited}")
                 # now we add to the stack the next id in the direction randomly picked
@@ -152,9 +186,50 @@ while plan_to_visit.size() > 0:
             elif next.id in visited:
                 print(f"it's in the visited list already")
         if rand_dir == None:
+            visited = g.vertices
             print("rand_dir == None")
+            print(f"current_room is: {current_room}")
+            the_exit = g.vertices[current_room]
+            exit = list(the_exit.keys())
+            exit_dir = exit[0]
+            print("exit from end: ", exit_dir)
+            goback = g.vertices[current_room][exit_dir]
+            print(f"goback should be previous room from end {goback}")
+            visited[current_room] = g.vertices[current_room]
+            # visited[current_room]
+            print(f"right before getting to bft in visited: {visited}")
             # put in the BFT now to find next room with unused exits.
-    print(player.current_room.id)
+            # copied the path taken
+            tp_copy = traversal_path.copy()
+            print(f"copy of traversal path: ", tp_copy)
+            # make Queue and keep puting into queue the reverse of path copy from the end
+            q = Queue()
+            q.enqueue(tp_copy[-1])
+            # the q is holding copy of traversal path
+            while q.size() > 0:
+                current_q = q.dequeue()
+                print(f"now in bft part at {current_q}")
+                is_empty = get_check_dir(player.current_room.id)
+                print(f"printing is_empty return: ", is_empty)
+                if is_empty is True:
+                    dir = make_opposite_dir(current_q)
+                    print("dir in queue: ", dir)
+                    print(f"doing the travel thing...now")
+
+                    player.travel(dir)
+                    traversal_path.append(dir)
+                    tp_copy = tp_copy[:-1]
+                    print(player.current_room.id)
+                    print("tp_copy: ", tp_copy)
+                    print("traversal_path: ", traversal_path)
+                    if len(tp_copy) != 0:
+                        q.enqueue(tp_copy[-1])
+    current = player.current_room.id
+    print("back to stack again: ", current, player.current_room.id)
+    rand_dir = get_good_dir(current)
+    # when dequeueing from end remove it from path copy
+    # also need to
+    print(f"in room: ", player.current_room.id)
     # this is where i put the bft part now until find a room with an exit that isnt used yet
     ####
     # NOW BACK TO PREVIOUSLY WRITTEN CODE (NOT MINE BELOW)... ITS THE TEST TRAVERSAL
