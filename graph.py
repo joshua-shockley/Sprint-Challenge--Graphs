@@ -20,12 +20,7 @@ class Graph:
         # this should not be a preset list... should be added from get_exits()
         self.vertices[vertex_id] = {}
 
-    def add_init_edge(self, v1, directions):
-        if v1 in self.vertices:
-            for i in directions:
-                self.vertices[v1][i] = '?'
-
-    def add_edge(self, v1, v2, v3, opp_fn):
+    def add_edge(self, v1, v2, v3):
         """
         Add a directed edge to the graph.
 
@@ -35,9 +30,7 @@ class Graph:
         """
 
         if v1 in self.vertices and v3 in self.vertices:
-            v4 = opp_fn
             self.vertices[v1][v2] = v3
-            self.vertices[v3][v4] = v1
         else:
             raise IndexError("That vertex does not exist!")
 
