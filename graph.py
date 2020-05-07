@@ -20,6 +20,10 @@ class Graph:
         # this should not be a preset list... should be added from get_exits()
         self.vertices[vertex_id] = {}
 
+    def init_R_edges(self, v1, v2):
+        if v1 in self.vertices:
+            self.vertices[v1][v2] = '?'
+
     def add_edge(self, v1, v2, v3):
         """
         Add a directed edge to the graph.

@@ -11,8 +11,8 @@ world = World()
 
 
 # You may uncomment the smaller graphs for development and testing purposes.
-map_file = "maps/test_line.txt"  # this one passes currently
-# map_file = "maps/test_cross.txt"
+# map_file = "maps/test_line.txt"  # this one passes currently
+map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
 # map_file = "maps/main_maze.txt"
@@ -42,9 +42,10 @@ def get_opposite(dir):
 
 
 def get_dir(cur_room, dir_list):
+    print(f"what exists in the vertices?  {g.vertices}")
     if len(dir_list) == 1:
         dir = dir_list[-1]
-        print(f"only one direction to go from here, {dir}")
+        # print(f"only one direction to go from here, {dir}")
         return dir
     elif len(dir_list) > 1:
         dirs = dir_list.copy()
@@ -53,18 +54,26 @@ def get_dir(cur_room, dir_list):
         print(
             f"visited: {visited}, g.vertices[current_room]: {g.vertices[player.current_room.id]}")
         for dir in g.vertices[cur_room].keys():
-            print(dir)
+            print(f"for dir in vertices current room keys: ", dir)
             room = player.current_room.get_room_in_direction(dir)
             if room.id in visited:
-                print("yuppppppppers", room.id, dir)
+                # print(
+                #     "yuppppppppers it's in there all right... let's remove it", room.id, dir)
                 dirs.remove(dir)
-                print(f"length of dirs {len(dirs)}")
-        if len(dirs) == 1:
-            dir = dirs[-1]
-            return dir
-        print(f"after removing what's been visited")
+        # print(f"length of dirs {len(dirs)}")
+        index = random.randint(0, len(dirs)-1)
+        dir = dirs[index]
+        print(
+            f"after removing what's been visited and picking random leftover: {dir}")
+        return dir
+    # else:
+    #     return None
 
-       # return dir
+
+def init_g_dirs(c_room, list):
+    for direction in list:
+        g.init_R_edges(c_room, direction)
+    # print(f"in init_g_dirs : {g.vertices}")
 
 
 # using dft(depth)/use stack for main traversal
@@ -75,51 +84,132 @@ g = Graph()
 # find what neighbors are available by random number pick and have a fail safe conditional setup
 starting_vertex = current_R.id
 plan_to_visit = Stack()  # for dft
-p_to_v = Queue()  # for bft
 plan_to_visit.push(starting_vertex)
+g.add_vertex(starting_vertex)
 print(f"before the while loop for dft: {g.vertices}")
 visited = []  # will store ({room})
+previous = ['', '']
+next = []
 # start the DFT part
 while plan_to_visit.size() > 0:
     print(''*3)
     # will need to do a bft part for when current is in visited and check for routes == '?'
     c_room = plan_to_visit.pop()
-    if c_room not in visited:
+    # should skip the first move will need to reassign again to none for bft
+    if len(visited) >= 1:
+        previous[0] = visited[-1]
+        print(f"assigned to previous room id, {previous[0]} current: {c_room}")
+    # should stop the loop when the visited list matches the length of the maze_room's length
+
+    if c_room not in visited:  # do if the room from the stack now the current room is not in the visited list
+        # g.add_vertex(c_room)
         visited.append((c_room))
-        # we here now let's add to visited already
-        g.add_vertex(c_room)
-
-        # now need to do the things before checking for neighbors
+        pos_exits = player.current_room.get_exits()
+        print(f"possible exits: {pos_exits}")
+        init_g_dirs(c_room, pos_exits)
         print(
-            f"c_room: {c_room}, player.current_room.id {player.current_room.id}")
-        the_next = player.current_room.get_exits()
-        print(f"printing the_next: ", the_next)
-        for nxt_dir in the_next:
-            next = player.current_room.get_room_in_direction(nxt_dir)
-            print(f"printing next: {next.id}")
-            g.add_vertex(next.id)
-            g.add_edge(c_room, nxt_dir, next.id)
-            print(f"the g.vertices: ", g.vertices)
-            dir = get_dir(player.current_room.id, the_next)
-            if dir != None and next.id not in visited:
-                plan_to_visit.push(next.id)
-                player.travel(dir)
+            f"now lets look at graph after adding all possible edges and before assigning a dir to go in: {g.vertices}")
+        dir = get_dir(player.current_room.id, player.current_room.get_exits())
+        print(f"printing the dir when current room not in visited {dir}")
+        print(g.vertices)
+        next_room = player.current_room.get_room_in_direction(dir)
+        next = next_room.id
+        if next not in g.vertices:
+            g.add_vertex(next)
+            g.add_edge(c_room, dir, next)
 
-            if dir == None:
-                print("what the frick")
-                print(f"at the dir of None: ", g.vertices)
-                # continue
-            print(f"the dir picked: {dir}")
+        if previous[0] != '' and previous[1] != '':
+            print(
+                f"printing previous near top to see what's going on {previous} \n c_room: {c_room}")
+            g.add_edge(previous[0], previous[1], c_room)
+            g.add_edge(c_room, get_opposite(previous[1]), previous[0])
+        print(f"the next room based on the decision: {next_room.id}")
+        print(f"visited just befor moving to next: {visited}")
+        if len(visited) == len(room_graph):
+            print("visited length matches room-graph length")
+            print(
+                f"current room is: {player.current_room.id}, next is {next}, dir is {dir} \n previous is {previous}")
+        if next not in visited:
+            previous[0] = c_room
+            previous[1] = dir
+            g.add_edge(c_room, dir, next)
+            traversal_path.append(dir)
+            plan_to_visit.push(next)
+            player.travel(dir)
+        print(
+            f"previous room: {previous[0]}, previous dir: {previous[1]}, c_room: {c_room}, current dir: {dir}")
+        print(f"before going into bft part: {g.vertices}")
+        print(
+            f"current room {player.current_room.id} aka c_room now in visited {visited}")
+        for spot in g.vertices:
+            print(g.vertices[spot])
+            if len(g.vertices[spot]) > 2:
+                print(spot)
+                get_to = spot
+        # this is the bfs
+        visited_vertices = set()
+        neighbors_to_visit = Queue()
+        neighbors_to_visit.enqueue([player.current_room.id])
+        # while the queue is not empty
+        while neighbors_to_visit.size() > 0:
+            # dequeue the first PATH in the queue
+            current_path = neighbors_to_visit.dequeue()
+            print(f"current_path: {current_path}")
+            # grab the last vertex in the path
+            current_vertex = current_path[-1]
+            # if it hasn't been visited
+            if current_vertex not in visited_vertices:
+                # check if its the target
+                if current_vertex == get_to:
+                    after_Q = current_path
+                    print(f"after_Q", after_Q)
+                    print(
+                        f"current_certex: {current_vertex}, player.current_room.id: {player.current_room.id}")
+                    print(f"traversal_path,: {traversal_path}")
+                    next_dir_list = player.current_room.get_exits()
+                    next_dir = get_dir(current_vertex, next_dir_list)
+                    previous[0] = current_vertex
+                    previous[1] = next_dir
+                    room = player.current_room.get_room_in_direction(next_dir)
+                    next_room = room.id
+                    g.add_vertex(next_room)
+                    # g.add_edge(current_vertex, next_dir, next_room)
+                    traversal_path.append(next_dir)
+                    plan_to_visit.push(next_room)
+                    player.travel(next_dir)
 
-            print("time to switch")
+                    print(f"printing next_dir: {next_dir}")
 
-        print(f"looking at what is in visited, {visited}")
+                    # break
+                    # this is where i add current index into stack
+                    # this is also most likely where i need to make this a fn above
+                    # so that i can return and
+                # mark it as visited
+                else:
+                    visited_vertices.add(current_vertex)
+                    print(f"visited_vertices: {visited_vertices}")
+                    the_n = g.get_neighbors(current_vertex)
+                    print(the_n)
+                    if len(the_n) <= 2:
+                        for key, value in the_n.items():
+                            print(value)
+                            if value not in visited_vertices:
+                                print(f"value: ", value)
+                                new_path = list(current_path)
+                                new_path.append(value)
+                                traversal_path.append(key)
+                                player.travel(key)
+                                neighbors_to_visit.enqueue(new_path)
+    if c_room in visited:
+        print(f"after everything at if current_room in visited...{visited}")
+        print(f"graph: {g.vertices}, current_room: {player.current_room.id}")
 
-    ####
 
-    # NOW BACK TO PREVIOUSLY WRITTEN CODE (NOT MINE BELOW)... ITS THE TEST TRAVERSAL
+####
 
-    # TRAVERSAL TEST - DO NOT MODIFY
+# NOW BACK TO PREVIOUSLY WRITTEN CODE (NOT MINE BELOW)... ITS THE TEST TRAVERSAL
+
+# TRAVERSAL TEST - DO NOT MODIFY
 visited_rooms = set()
 player.current_room = world.starting_room
 visited_rooms.add(player.current_room)
