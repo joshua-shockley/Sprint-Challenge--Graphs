@@ -15,9 +15,9 @@ world = World()
 # map_file = "maps/test_line.txt"  # this one passes currently
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
-map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
-
+# map_file = "maps/test_loop_fork.txt"
+map_file = "maps/main_maze.txt"
+#
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
 world.load_graph(room_graph)
@@ -47,7 +47,7 @@ for each in world.rooms:
     g.add_vertex(each)
     for exit in world.rooms[each].get_exits():
         g.vertices[each][exit] = '?'
-print(g.vertices)
+# print(g.vertices)
 # this looks at entire graph and looks for values with "?"
 
 
@@ -76,7 +76,7 @@ def find_all_Qs():
 
 
 the_q_list = find_all_Qs()
-print(f"the_q_list: {the_q_list}, len(the_q_list): {len(the_q_list)}")
+# print(f"the_q_list: {the_q_list}, len(the_q_list): {len(the_q_list)}")
 # g.get_room_Q(g.vertices[player.current_room.id])
 # will get you either None if empty or a list of
 # the directions for that room with value == '?'
@@ -94,21 +94,21 @@ def bfs_to_another_hallway(visited, currentV, Qpath, old_path, plan_to_visit, pa
     together_now = ''
     while q.size() > 0 and len(q_list) > 0:
         q_list = find_all_Qs()
-        print(f"list of the dirs with '?' {q_list}")
+        # print(f"list of the dirs with '?' {q_list}")
         current_path = q.dequeue()
         current_room = current_path[-1]
         any = g.get_room_Q(current_room)
-        print(
-            f"any from bfs at current_room: {current_room}, exits: {any}")
+        # print(
+        #     f"any from bfs at current_room: {current_room}, exits: {any}")
         if any == None:
             # print('means no room is unused at this loc')
             # add directions and save a path then return it
             visited.add(current_room)
             next_rooms = g.get_neighbors(current_room)
             for dir in next_rooms:
-                print(f"direction avail: {dir}")
-                print(
-                    f"next room would be: {g.vertices[current_room][dir]}")
+                # print(f"direction avail: {dir}")
+                # print(
+                #     f"next room would be: {g.vertices[current_room][dir]}")
                 if g.vertices[current_room][dir] != '?' and g.vertices[current_room][dir] not in visited:
                     Qpath.append(g.vertices[current_room][dir])
                     new_path = Qpath.copy()
@@ -124,8 +124,8 @@ def bfs_to_another_hallway(visited, currentV, Qpath, old_path, plan_to_visit, pa
             # print(f"player current location: {player.current_room.id}")
             # now need to push current room to stack to continue the
             together_now = old_path + Qpath
-            print(
-                f"together_now-putting traversal path together: {together_now}")
+            # print(
+            #     f"together_now-putting traversal path together: {together_now}")
     return together_now
 
 
@@ -161,18 +161,18 @@ def get_to_all_room():
             # at end of hallway this is where we bfs back to
 
             # head back to find room with unexplored exits
-        current_N = g.get_neighbors(current)
+        # current_N = g.get_neighbors(current)
         # print(f"current_dir_list: {current_dir_list}\ncurrent_N: {current_N}")
         next_dir = pick_room(current_dir_list)
         if next_dir == None:
             return f"its at the end of this line {current_path},  current loc: {current}"
-        print(f"next_dir: ", next_dir)
+        # print(f"next_dir: ", next_dir)
         next_room = player.current_room.get_room_in_direction(next_dir)
         next_room = next_room.id
         # print(f"next_room: {next_room}")
         g.add_edge(current, next_dir, next_room)
         g.add_edge(next_room, get_opposite(next_dir), current)
-        print(g.vertices)
+        # print(g.vertices)
         # now we travel down the hallway
         current_path.append(next_room)
         copy_path = current_path.copy()
@@ -183,7 +183,7 @@ def get_to_all_room():
         the_q_list = find_all_Qs()
         if the_q_list == None:
             been_to = True
-        print(f"the_q_list: {the_q_list}")
+        # print(f"the_q_list: {the_q_list}")
         player.travel(next_dir)
         plan_to_visit.push(copy_path)
 
