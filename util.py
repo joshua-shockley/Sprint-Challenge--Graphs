@@ -75,7 +75,8 @@ class Graph:
         """
         Get all neighbors (edges) of a vertex.
         """
-        return self.vertices[vertex_id]
+        return list(self.vertices[vertex_id].keys()
+                    )
 
     def get_room_Q(self, vertex_id):
         the_Qs = []
@@ -87,3 +88,35 @@ class Graph:
             return None
         else:
             return the_Qs
+
+    # def bfs_to_another_hallway(self, visited, currentV, Qpath, old_path, plan_to_visit):
+    #     q = Queue()
+    #     q.enqueue([currentV])
+    #     # visited is being used from
+    #     # adding to path needs to be the 'next_room'
+    #     # adding current on the way back adds
+    #     # the ending of the hallway 2x's
+
+    #     while q.size() > 0:
+    #         current_path = q.dequeue()
+    #         current_room = current_path[-1]
+    #         any = self.get_room_Q(current_room)
+    #         print(
+    #             f"any from bfs at current_room: {current_room}, exits: {any}")
+    #         if any == None:
+    #             print('means no room is unused at this loc')
+    #             # add directions and save a path then return it
+    #             visited.add(current_room)
+    #             next_rooms = self.get_neighbors(current_room)
+    #             for dir in next_rooms:
+    #                 print(f"direction avail: {dir}")
+    #                 print(
+    #                     f"next room would be: {self.vertices[current_room][dir]}")
+    #                 if self.vertices[current_room][dir] != '?' and self.vertices[current_room][dir] not in visited:
+    #                     Qpath.append(self.vertices[current_room][dir])
+    #                     new_path = Qpath.copy()
+    #                     q.enqueue(new_path)
+    #         else:
+    #             print(f"found a room {current_room} with exits{any}")
+    #     print(f"current_path outside bfs: {old_path}")
+    #     print(f"path: {Qpath}")
