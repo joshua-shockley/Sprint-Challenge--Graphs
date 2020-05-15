@@ -57,7 +57,8 @@ def get_opposite(dir):
 
 
 def pick_room(list):
-    if len(list) >= 1:
+    if len(list) >= 1:  # current room list of dir... check for what room it is and if its in visited
+
         dir = random.choice(list)
         return dir
     else:
@@ -98,8 +99,8 @@ def bfs_to_another_hallway(visited, currentV, Qpath, old_path, plan_to_visit, pa
         current_path = q.dequeue()
         current_room = current_path[-1]
         any = g.get_room_Q(current_room)
-        # print(
-        #     f"any from bfs at current_room: {current_room}, exits: {any}")
+        print(
+            f"any from bfs at current_room: {current_room}, exits: {any}")
         if any == None:
             # print('means no room is unused at this loc')
             # add directions and save a path then return it
@@ -107,8 +108,8 @@ def bfs_to_another_hallway(visited, currentV, Qpath, old_path, plan_to_visit, pa
             next_rooms = g.get_neighbors(current_room)
             for dir in next_rooms:
                 # print(f"direction avail: {dir}")
-                # print(
-                #     f"next room would be: {g.vertices[current_room][dir]}")
+                print(
+                    f"next room would be: {g.vertices[current_room][dir]}")
                 if g.vertices[current_room][dir] != '?' and g.vertices[current_room][dir] not in visited:
                     Qpath.append(g.vertices[current_room][dir])
                     new_path = Qpath.copy()
