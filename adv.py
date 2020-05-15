@@ -83,7 +83,7 @@ the_q_list = find_all_Qs()
 # the directions for that room with value == '?'
 
 
-def bfs_to_another_hallway(visited, currentV, Qpath, old_path, plan_to_visit, pathDirs):
+def bfs_to_another_hallway(currentV, Qpath, old_path, plan_to_visit, pathDirs):
     q = Queue()
     q.enqueue([currentV])
     # visited is being used from
@@ -104,13 +104,16 @@ def bfs_to_another_hallway(visited, currentV, Qpath, old_path, plan_to_visit, pa
         if any == None:
             # print('means no room is unused at this loc')
             # add directions and save a path then return it
-            visited.add(current_room)
+            # was a set and was visited.add(current_room)
+            print(f"if any == None in bfs_to_another_hallway(): \n", g.visited)
             next_rooms = g.get_neighbors(current_room)
+            g.visited.append(current_room)
+            print(f"g.visited: ", g.visited)
             for dir in next_rooms:
                 # print(f"direction avail: {dir}")
                 print(
                     f"next room would be: {g.vertices[current_room][dir]}")
-                if g.vertices[current_room][dir] != '?' and g.vertices[current_room][dir] not in visited:
+                if g.vertices[current_room][dir] != '?' and g.vertices[current_room][dir] not in g.visited:
                     Qpath.append(g.vertices[current_room][dir])
                     new_path = Qpath.copy()
                     pathDirs.append(dir)
@@ -127,6 +130,7 @@ def bfs_to_another_hallway(visited, currentV, Qpath, old_path, plan_to_visit, pa
             together_now = old_path + Qpath
             # print(
             #     f"together_now-putting traversal path together: {together_now}")
+    print(g.visited)
     return together_now
 
 
@@ -138,7 +142,6 @@ def get_to_all_room():
     Qpath = []
     # try to use this to collect the dirs along the way of traversal, at the point of traversal
     pathDirs = []
-    visited = set()
     # now start the loop for the dft whileloop
 
     been_to = False
@@ -157,7 +160,7 @@ def get_to_all_room():
             # print(f"{current_path}")
 
             path = bfs_to_another_hallway(
-                visited, current, Qpath, current_path, plan_to_visit, pathDirs)
+                current, Qpath, current_path, plan_to_visit, pathDirs)
             plan_to_visit.push(path)
             # at end of hallway this is where we bfs back to
 
@@ -171,25 +174,27 @@ def get_to_all_room():
         next_room = player.current_room.get_room_in_direction(next_dir)
         next_room = next_room.id
         # print(f"next_room: {next_room}")
-        g.add_edge(current, next_dir, next_room)
-        g.add_edge(next_room, get_opposite(next_dir), current)
-        # print(g.vertices)
-        # now we travel down the hallway
-        current_path.append(next_room)
-        copy_path = current_path.copy()
-        pathDirs.append(next_dir)
-        # adding to the traversal_path
-        traversal_path.append(next_dir)
-        # print(f"copy_path: {copy_path}, pathDirs: {pathDirs}")
-        the_q_list = find_all_Qs()
-        if the_q_list == None:
-            been_to = True
-        # print(f"the_q_list: {the_q_list}")
-        player.travel(next_dir)
-        plan_to_visit.push(copy_path)
+        if next_room not in g.visited:
+            g.add_edge(current, next_dir, next_room)
+            g.add_edge(next_room, get_opposite(next_dir), current)
+            # print(g.vertices)
+            # now we travel down the hallway
+            current_path.append(next_room)
+            copy_path = current_path.copy()
+            pathDirs.append(next_dir)
+            # adding to the traversal_path
+            traversal_path.append(next_dir)
+            # print(f"copy_path: {copy_path}, pathDirs: {pathDirs}")
+            the_q_list = find_all_Qs()
+            if the_q_list == None:
+                been_to = True
+            # print(f"the_q_list: {the_q_list}")
+            player.travel(next_dir)
+            plan_to_visit.push(copy_path)
 
 
 get_to_all_room()
+print(g.visited)
 ####
 # NOW BACK TO PREVIOUSLY WRITTEN CODE (NOT MINE BELOW)... ITS THE TEST TRAVERSAL
 # TRAVERSAL TEST - DO NOT MODIFY
