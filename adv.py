@@ -15,13 +15,12 @@ world = World()
 # map_file = "maps/test_line.txt"  # this one passes currently
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
-# map_file = "maps/test_loop_fork.txt"
-map_file = "maps/main_maze.txt"
-#
+map_file = "maps/test_loop_fork.txt"
+# map_file = "maps/main_maze.txt"
+
 # Loads the map into a dictionary
 room_graph = literal_eval(open(map_file, "r").read())
 world.load_graph(room_graph)
-
 # Print an ASCII map
 world.print_rooms()
 
@@ -44,157 +43,104 @@ print(f"starting_room: {current_R.id}")
 starting_room = current_R.id
 # this creates the graph with neighbors (key being direction) with the neighboring rooms (as the value )
 for each in world.rooms:
-    g.add_vertex(each)
-    for exit in world.rooms[each].get_exits():
-        g.vertices[each][exit] = '?'
-# print(g.vertices)
-# this looks at entire graph and looks for values with "?"
+    g.addV(each)
 
 
-def get_opposite(dir):
-    direction = {'n': 's', 's': 'n', 'w': 'e', 'e': 'w'}
-    return direction[dir]
-
-
-def pick_room(list):
-    if len(list) >= 1:  # current room list of dir... check for what room it is and if its in visited
-
-        dir = random.choice(list)
-        return dir
+print(f"printing room_graph ", room_graph)
+for item in room_graph:
+    for key, values in room_graph[item][1].items():
+        g.addEdge(item, values)
+print(f"my graph: {g.vertices}")
+print(f"copy of g.vertices: {g.verts}")
+keep_G = True
+#this is about where the while loop should be to look to see if all rooms show up in path
+#to then be adapted outside of this to directions to be saved to the traversal_path.
+total_path=[]
+all = set()
+def any_left(all, keep_G):#this takes the rooms keeping what hasn't been seen yet
+    new_list =[]
+    for each in g.vertices.keys():
+        if each not in all:
+            new_list.append(each)
+    print(f"any_left fn made above loop: {new_list}")
+    if len(new_list) > 0:
+        return new_list
     else:
-        return None
+        print(f"print out that nothing in the list for what's left")
+        return False
+        
+
+while True:
+    vertices = g.vertices
+    verts = g.verts
+    dft_path = g.dft(starting_room, all)
+    print(f"depth path taken: {dft_path}")
+    #do dft down one hallway to the end
+    #should only have one way to go at the end of hallway
+    #len(options)==1 at that point
+    print(f"any left: ",any_left(all, keep_G))
+
+    if dft_path != None:
+        for each in dft_path:
+            total_path.append(each)
+            if each not in all:
+                all.add(each)
+        print(f"added after dft is not None: {all}")
+        bfs_path = g.bfs(dft_path)
+        print(f"breadth seach to spot with 3 or more options: {bfs_path}")
+    elif dft_path == None:
+        print(f"something went wrong or needs a condition ========>")
+    if bfs_path !=None:
+        for each in bfs_path:
+            total_path.append(each)
+            if each not in all:
+                all.add(each)
+        print(f"added after bfs is not None: {all}")        
+        current = bfs_path[-1]
+        possible = g.get_neighbors(current)
+        print(f"current room before pick: {current}\npossible: {possible}")
+        new_possible = [each for each in possible if each not in all]
+        print(f"new_possible: {new_possible}")
+        print(f"total_path so far: {total_path}")
+        print(f"any left: ",any_left(all, keep_G))
+        what_left = any_left(all, keep_G)
+        if what_left == False:
+            break
+        elif len(new_possible) == 0 and len(what_left) > 0:
+            #do the bfs version looking for target room in the list
+            #then assign the path taken to get there to total_path
+            #then assign the last in that path which has options to starting room
+            #to kick off the traversals again
+            print(f"total_path before adding get_more: {total_path}")
+            get_more = g.bfs_all(current, what_left)
+            print(f"the get more to find what's left: {get_more}")
+            if get_more != None:
+                for each in get_more:
+                    total_path.append(each)
+                    if each not in all:
+                        all.add(each)
+                break #here it starts to repeat and build instead of just passing the last
+            # starting_room = total_path[-1]
+
+        # elif len(new_possible)>0:        
+            # possible = new_possible
+            # next_room = random.choice(possible)
+            # print(f"the next option chosen: {next_room}")
+            # starting_room = current
+    starting_room = total_path[-1]
+    #then need to bfs to point where there are options that we havent just done
+    #maybe this needs to take or look at what is in the path already
+    #and look for spot that first comes up that has options that we didnt use yet
+
+    #then before picking new direction add that path to the total_path to be converted to traversal_path
+
+print(f"after running function.. total_path: {total_path}")
+# for each in range(0,len(total_path)-1):
+#     if total_path[each] == total_path[each+1]:
+#         total_path.remove(total_path[each])
+# print(f"slimmed down list: {total_path}")
 
 
-def find_all_Qs():
-    qs = {}
-    for each in g.vertices:
-        # print(f"room: ", each)
-        if g.get_room_Q(each) != None:
-            qs[each] = g.get_room_Q(each)
-    if len(qs) == 0:
-        return None
-    return qs
-
-
-the_q_list = find_all_Qs()
-# print(f"the_q_list: {the_q_list}, len(the_q_list): {len(the_q_list)}")
-# g.get_room_Q(g.vertices[player.current_room.id])
-# will get you either None if empty or a list of
-# the directions for that room with value == '?'
-
-
-def bfs_to_another_hallway(currentV, Qpath, old_path, plan_to_visit, pathDirs):
-    q = Queue()
-    q.enqueue([currentV])
-    # visited is being used from
-    # adding to path needs to be the 'next_room'
-    # adding current on the way back adds
-    # the ending of the hallway 2x's
-    q_list = find_all_Qs()
-
-    together_now = ''
-    while q.size() > 0 and len(q_list) > 0:
-        q_list = find_all_Qs()
-        # print(f"list of the dirs with '?' {q_list}")
-        current_path = q.dequeue()
-        current_room = current_path[-1]
-        any = g.get_room_Q(current_room)
-        print(
-            f"any from bfs at current_room: {current_room}, exits: {any}")
-        if any == None:
-            # print('means no room is unused at this loc')
-            # add directions and save a path then return it
-            # was a set and was visited.add(current_room)
-            print(f"if any == None in bfs_to_another_hallway(): \n", g.visited)
-            next_rooms = g.get_neighbors(current_room)
-            g.visited.append(current_room)
-            print(f"g.visited: ", g.visited)
-            for dir in next_rooms:
-                # print(f"direction avail: {dir}")
-                print(
-                    f"next room would be: {g.vertices[current_room][dir]}")
-                if g.vertices[current_room][dir] != '?' and g.vertices[current_room][dir] not in g.visited:
-                    Qpath.append(g.vertices[current_room][dir])
-                    new_path = Qpath.copy()
-                    pathDirs.append(dir)
-                    # hopefully this puts the dir in the right spot... we'll see
-                    traversal_path.append(dir)
-                    q.enqueue(new_path)
-                    player.travel(dir)
-        else:
-            # print(f"found a room {current_room} with exits{any}")
-            # print(f"current_path outside bfs: {old_path}")
-            # print(f"path: {Qpath}")
-            # print(f"player current location: {player.current_room.id}")
-            # now need to push current room to stack to continue the
-            together_now = old_path + Qpath
-            # print(
-            #     f"together_now-putting traversal path together: {together_now}")
-    print(g.visited)
-    return together_now
-
-
-def get_to_all_room():
-    starting_room = current_R.id
-    plan_to_visit = Stack()
-    plan_to_visit.push([starting_room])
-    # mainly for the breadth first back to find next crosspoint with unused exits
-    Qpath = []
-    # try to use this to collect the dirs along the way of traversal, at the point of traversal
-    pathDirs = []
-    # now start the loop for the dft whileloop
-
-    been_to = False
-    # maybe need to add condition to look for all room to have no '?'
-    while plan_to_visit.size() > 0 and been_to == False:
-        current_path = plan_to_visit.pop()
-        current = current_path[-1]
-        # print(
-        #     f"at top of while loop, current room: {current}, current path: {current_path}")
-        # current_dir_list = g.get_room_Q(current)
-        current_dir_list = g.get_neighbors(current)
-        if current_dir_list == None:
-            # this means that the current room has no other directions to choose from not already seen
-            # print(
-            #     f"current room has no unused directions\nAlso may be the end of a hallway\n current room: {current}")
-            # print(f"{current_path}")
-
-            path = bfs_to_another_hallway(
-                current, Qpath, current_path, plan_to_visit, pathDirs)
-            plan_to_visit.push(path)
-            # at end of hallway this is where we bfs back to
-
-            # head back to find room with unexplored exits
-        # current_N = g.get_neighbors(current)
-        # print(f"current_dir_list: {current_dir_list}\ncurrent_N: {current_N}")
-        next_dir = pick_room(current_dir_list)
-        if next_dir == None:
-            return f"its at the end of this line {current_path},  current loc: {current}"
-        # print(f"next_dir: ", next_dir)
-        next_room = player.current_room.get_room_in_direction(next_dir)
-        next_room = next_room.id
-        # print(f"next_room: {next_room}")
-        if next_room not in g.visited:
-            g.add_edge(current, next_dir, next_room)
-            g.add_edge(next_room, get_opposite(next_dir), current)
-            # print(g.vertices)
-            # now we travel down the hallway
-            current_path.append(next_room)
-            copy_path = current_path.copy()
-            pathDirs.append(next_dir)
-            # adding to the traversal_path
-            traversal_path.append(next_dir)
-            # print(f"copy_path: {copy_path}, pathDirs: {pathDirs}")
-            the_q_list = find_all_Qs()
-            if the_q_list == None:
-                been_to = True
-            # print(f"the_q_list: {the_q_list}")
-            player.travel(next_dir)
-            plan_to_visit.push(copy_path)
-
-
-get_to_all_room()
-print(g.visited)
 ####
 # NOW BACK TO PREVIOUSLY WRITTEN CODE (NOT MINE BELOW)... ITS THE TEST TRAVERSAL
 # TRAVERSAL TEST - DO NOT MODIFY
